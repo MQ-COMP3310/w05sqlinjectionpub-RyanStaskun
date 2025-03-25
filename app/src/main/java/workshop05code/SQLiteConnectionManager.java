@@ -8,16 +8,14 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-
-//Import for logging exercise
+// Import for logging exercise
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
 
 public class SQLiteConnectionManager {
-    //Start code logging exercise
+    // Start code logging exercise
     static {
         // must set before the Logger
         // loads logging.properties from the classpath
@@ -29,7 +27,7 @@ public class SQLiteConnectionManager {
     }
 
     private static final Logger logger = Logger.getLogger(SQLiteConnectionManager.class.getName());
-    //End code logging exercise
+    // End code logging exercise
     
     private String databaseURL = "";
 
@@ -60,21 +58,19 @@ public class SQLiteConnectionManager {
      * @param fileName the database file name
      */
     public void createNewDatabase(String fileName) {
-
         try (Connection conn = DriverManager.getConnection(databaseURL)) {
             if (conn != null) {
                 DatabaseMetaData meta = conn.getMetaData();
-                System.out.println("The driver name is " + meta.getDriverName());
-                System.out.println("A new database has been created.");
-
+                logger.info("The driver name is " + meta.getDriverName());
+                logger.info("A new database has been created.");
             }
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            logger.log(Level.SEVERE, "Failed to create new database.", e);
         }
     }
 
     /**
-     * Check that the file has been cr3eated
+     * Check that the file has been created
      *
      * @return true if the file exists in the correct location, false otherwise. If
      *         no url defined, also false.
@@ -88,7 +84,7 @@ public class SQLiteConnectionManager {
                     return true;
                 }
             } catch (SQLException e) {
-                System.out.println(e.getMessage());
+                logger.log(Level.SEVERE, "Failed to check if connection is defined.", e);
                 return false;
             }
         }
@@ -105,15 +101,14 @@ public class SQLiteConnectionManager {
             return false;
         } else {
             try (Connection conn = DriverManager.getConnection(databaseURL);
-                    Statement stmt = conn.createStatement()) {
+                 Statement stmt = conn.createStatement()) {
                 stmt.execute(WORDLE_DROP_TABLE_STRING);
                 stmt.execute(WORDLE_CREATE_STRING);
                 stmt.execute(VALID_WORDS_DROP_TABLE_STRING);
                 stmt.execute(VALID_WORDS_CREATE_STRING);
                 return true;
-
             } catch (SQLException e) {
-                System.out.println(e.getMessage());
+                logger.log(Level.SEVERE, "Failed to create Wordle tables.", e);
                 return false;
             }
         }
@@ -126,20 +121,18 @@ public class SQLiteConnectionManager {
      * @param word the word to store
      */
     public void addValidWord(int id, String word) {
-
-        String sql = "INSERT INTO validWords(id,word) VALUES(?, ?)";
+        String sql = "INSERT INTO validWords(id, word) VALUES(?, ?)";
 
         try (Connection conn = DriverManager.getConnection(databaseURL);
-                PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-                    pstmt.setInt(1, id);
-                    pstmt.setString(2, word);
+            pstmt.setInt(1, id);
+            pstmt.setString(2, word);
 
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            logger.log(Level.SEVERE, "Failed to add valid word.", e);
         }
-
     }
 
     /**
@@ -152,9 +145,9 @@ public class SQLiteConnectionManager {
         String sql = "SELECT count(id) as total FROM validWords WHERE word = ?";
 
         try (Connection conn = DriverManager.getConnection(databaseURL);
-                PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-                    stmt.setString(1, guess);
+            stmt.setString(1, guess);
 
             ResultSet resultRows = stmt.executeQuery();
             if (resultRows.next()) {
@@ -163,11 +156,9 @@ public class SQLiteConnectionManager {
             }
 
             return false;
-
         } catch (SQLException e) {
-            System.out.println(e.getMessage());
+            logger.log(Level.SEVERE, "Failed to check if word is valid.", e);
             return false;
         }
-
     }
 }
